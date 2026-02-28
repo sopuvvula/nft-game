@@ -7,4 +7,5 @@ Version specs live in `docs/versions/`.
 | Version | File                    | Status      | Summary                        |
 |---------|-------------------------|-------------|--------------------------------|
 | v0.1    | docs/versions/v0.1.md   | ✅ Complete  | Core loop, 5 lanes, 3 cards    |
-| v0.2    | docs/versions/v0.2.md   | 🗂 Planning  | Backline lanes                 |
+| v0.2    | docs/versions/v0.2.md   | ✅ Complete  | Backline lanes                 |
+| v0.3    | docs/versions/v0.3.md   | 🗂 Planning  | Visual polish                  |
