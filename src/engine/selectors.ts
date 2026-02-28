@@ -15,8 +15,9 @@ export function getSelectedCard(state: GameState): Card | null {
 }
 
 export function getSelectedAttacker(state: GameState): UnitInstance | null {
-  if (state.selectedAttackerLane === null) return null;
-  return getActivePlayer(state).lanes[state.selectedAttackerLane] ?? null;
+  const { selectedAttackerLane, selectedAttackerRow } = state;
+  if (selectedAttackerLane === null || selectedAttackerRow === null) return null;
+  return getActivePlayer(state)[selectedAttackerRow][selectedAttackerLane] ?? null;
 }
 
 export function canAffordCard(state: GameState, cardIndex: number): boolean {

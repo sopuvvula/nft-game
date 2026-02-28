@@ -9,10 +9,21 @@ interface CardTemplate {
 }
 
 const CARD_TEMPLATES: CardTemplate[] = [
-  { templateId: 'vanguard', name: 'Vanguard', cost: 2, atk: 1, hp: 4 },
-  { templateId: 'striker', name: 'Striker', cost: 2, atk: 2, hp: 3 },
+  { templateId: 'vanguard',     name: 'Vanguard',     cost: 2, atk: 1, hp: 4 },
+  { templateId: 'striker',      name: 'Striker',      cost: 2, atk: 2, hp: 3 },
   { templateId: 'glass-cannon', name: 'Glass Cannon', cost: 3, atk: 4, hp: 2 },
+  { templateId: 'sentinel',     name: 'Sentinel',     cost: 3, atk: 1, hp: 6 },
+  { templateId: 'phantom',      name: 'Phantom',      cost: 2, atk: 3, hp: 2 },
 ];
+
+// 12-card deck: 3 + 3 + 2 + 2 + 2
+const COPIES: Record<string, number> = {
+  vanguard: 3,
+  striker: 3,
+  'glass-cannon': 2,
+  sentinel: 2,
+  phantom: 2,
+};
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -26,7 +37,7 @@ function shuffle<T>(arr: T[]): T[] {
 function buildDeck(playerPrefix: Player): Card[] {
   const cards: Card[] = [];
   for (const t of CARD_TEMPLATES) {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < COPIES[t.templateId]; i++) {
       cards.push({
         instanceId: `${playerPrefix}-${t.templateId}-${i}`,
         templateId: t.templateId,
@@ -45,11 +56,12 @@ function buildPlayer(id: Player): PlayerState {
   return {
     id,
     coreHp: 15,
-    energy: 2, // resource phase pre-applied for first turn
+    energy: 2,
     hand: deck.slice(0, 5),
     deck: deck.slice(5),
     discard: [],
-    lanes: [null, null, null, null, null],
+    frontline: [null, null, null, null, null],
+    backline: [null, null, null, null, null],
   };
 }
 
@@ -63,6 +75,7 @@ export function createInitialState(): GameState {
     phase: 'main',
     selectedCardIndex: null,
     selectedAttackerLane: null,
+    selectedAttackerRow: null,
     log: ["Game started. Player A's turn. (Main Phase)"],
     winner: null,
     turnNumber: 1,

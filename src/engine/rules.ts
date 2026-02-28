@@ -1,9 +1,10 @@
-import { GameState, PlayerState, UnitInstance, Player } from './types';
+import { GameState, PlayerState, UnitInstance, Player, Row } from './types';
 
 export function canPlayCard(
   state: GameState,
   cardIndex: number,
-  laneIndex: number
+  laneIndex: number,
+  row: Row
 ): { ok: boolean; reason?: string } {
   if (state.phase !== 'main') return { ok: false, reason: 'Not in Main Phase' };
   const player = state.players[state.activePlayer];
@@ -12,23 +13,31 @@ export function canPlayCard(
   if (laneIndex < 0 || laneIndex > 4) return { ok: false, reason: 'Invalid lane' };
   const card = player.hand[cardIndex];
   if (card.cost > player.energy) return { ok: false, reason: 'Not enough energy' };
-  if (player.lanes[laneIndex] !== null) return { ok: false, reason: 'Lane is occupied' };
+  if (player[row][laneIndex] !== null) return { ok: false, reason: 'Lane is occupied' };
   return { ok: true };
+}
+
+// A backline unit is exposed when no friendly unit occupies the same frontline lane.
+export function isExposed(laneIndex: number, playerState: PlayerState): boolean {
+  return playerState.frontline[laneIndex] === null;
 }
 
 export function canAttack(
   state: GameState,
   attackerLane: number,
+  attackerRow: Row,
   targetLane: number
 ): { ok: boolean; reason?: string } {
   if (state.phase !== 'combat') return { ok: false, reason: 'Not in Combat Phase' };
   if (attackerLane < 0 || attackerLane > 4) return { ok: false, reason: 'Invalid attacker lane' };
   if (targetLane < 0 || targetLane > 4) return { ok: false, reason: 'Invalid target lane' };
-  if (attackerLane !== targetLane)
-    return { ok: false, reason: 'No cross-lane attacks allowed' };
-  const attacker = state.players[state.activePlayer].lanes[attackerLane];
+  if (attackerLane !== targetLane) return { ok: false, reason: 'No cross-lane attacks allowed' };
+  const activePlayer = state.players[state.activePlayer];
+  const attacker = activePlayer[attackerRow][attackerLane];
   if (!attacker) return { ok: false, reason: 'No unit in attacker lane' };
   if (attacker.hasAttacked) return { ok: false, reason: 'Unit already attacked this turn' };
+  if (attackerRow === 'backline' && !isExposed(attackerLane, activePlayer))
+    return { ok: false, reason: 'Backline unit is protected — frontline lane is occupied' };
   return { ok: true };
 }
 

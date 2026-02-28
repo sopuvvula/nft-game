@@ -1,5 +1,6 @@
 export type Player = 'A' | 'B';
 export type Phase = 'main' | 'combat';
+export type Row = 'frontline' | 'backline';
 
 export interface Card {
   instanceId: string;
@@ -28,7 +29,8 @@ export interface PlayerState {
   hand: Card[];
   deck: Card[];
   discard: Card[];
-  lanes: (UnitInstance | null)[];
+  frontline: (UnitInstance | null)[];
+  backline: (UnitInstance | null)[];
 }
 
 export interface GameState {
@@ -37,6 +39,7 @@ export interface GameState {
   phase: Phase;
   selectedCardIndex: number | null;
   selectedAttackerLane: number | null;
+  selectedAttackerRow: Row | null;
   log: string[];
   winner: Player | null;
   turnNumber: number;
@@ -45,9 +48,9 @@ export interface GameState {
 export type Action =
   | { type: 'SELECT_CARD'; payload: { index: number } }
   | { type: 'DESELECT_CARD' }
-  | { type: 'PLAY_CARD'; payload: { laneIndex: number } }
+  | { type: 'PLAY_CARD'; payload: { laneIndex: number; row: Row } }
   | { type: 'ENTER_COMBAT' }
   | { type: 'SKIP_COMBAT' }
-  | { type: 'SELECT_ATTACKER'; payload: { laneIndex: number } }
+  | { type: 'SELECT_ATTACKER'; payload: { laneIndex: number; row: Row } }
   | { type: 'ATTACK'; payload: { targetLaneIndex: number } }
   | { type: 'END_TURN' };

@@ -1,7 +1,7 @@
 import { useReducer } from 'react';
 import { createInitialState } from './engine/initialState';
 import { reducer } from './engine/reducer';
-import { Action, Player } from './engine/types';
+import { Action, Player, Row } from './engine/types';
 import { Board } from './ui/Board';
 import { Hand } from './ui/Hand';
 import { Controls } from './ui/Controls';
@@ -10,20 +10,21 @@ import { Log } from './ui/Log';
 export default function App() {
   const [state, dispatch] = useReducer(reducer, null, createInitialState);
 
-  const handleLaneClick = (player: Player, laneIndex: number) => {
-    const { activePlayer, phase, selectedCardIndex, selectedAttackerLane } = state;
+  const handleLaneClick = (player: Player, row: Row, laneIndex: number) => {
+    const { activePlayer, phase, selectedCardIndex, selectedAttackerLane, selectedAttackerRow } = state;
 
     if (phase === 'main') {
       if (player === activePlayer && selectedCardIndex !== null) {
-        dispatch({ type: 'PLAY_CARD', payload: { laneIndex } });
+        dispatch({ type: 'PLAY_CARD', payload: { laneIndex, row } });
       }
     } else if (phase === 'combat') {
       if (player === activePlayer) {
-        if (state.players[activePlayer].lanes[laneIndex]) {
-          dispatch({ type: 'SELECT_ATTACKER', payload: { laneIndex } });
+        const unit = state.players[activePlayer][row][laneIndex];
+        if (unit) {
+          dispatch({ type: 'SELECT_ATTACKER', payload: { laneIndex, row } });
         }
       } else {
-        if (selectedAttackerLane !== null) {
+        if (selectedAttackerLane !== null && selectedAttackerRow !== null) {
           dispatch({ type: 'ATTACK', payload: { targetLaneIndex: laneIndex } });
         }
       }
@@ -38,7 +39,7 @@ export default function App() {
     }
   };
 
-  const { activePlayer, phase, turnNumber, selectedCardIndex, selectedAttackerLane } = state;
+  const { activePlayer, phase, turnNumber, selectedCardIndex, selectedAttackerLane, selectedAttackerRow } = state;
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'sans-serif', color: '#eee', background: '#0d0d0d' }}>
@@ -52,11 +53,11 @@ export default function App() {
           <span style={{ fontSize: 12, color: '#666' }}>
             Turn {turnNumber} &nbsp;|&nbsp; Player {activePlayer} &nbsp;|&nbsp; {phase.toUpperCase()}
             {selectedCardIndex !== null && ' — card selected'}
-            {selectedAttackerLane !== null && ` — attacker: lane ${selectedAttackerLane + 1}`}
+            {selectedAttackerLane !== null && ` — attacker: ${selectedAttackerRow} lane ${selectedAttackerLane + 1}`}
           </span>
         </div>
 
-        {/* Board — grows to fill available space */}
+        {/* Board */}
         <div style={{ flex: 1, minHeight: 0 }}>
           <Board state={state} onLaneClick={handleLaneClick} />
         </div>
