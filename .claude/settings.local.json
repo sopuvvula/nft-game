@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install 2>&1)",
+      "Bash(npm run test:smoke 2>&1)",
+      "Bash(npx tsc --noEmit 2>&1)",
+      "Bash(npm install --save-dev @types/node 2>&1 | tail -5)",
+      "Bash(npm run dev 2>&1)",
+      "Bash(gh auth status 2>&1 && git -C /home/mdasari/personal/nft-game rev-parse --git-dir 2>&1)",
+      "Bash(gh auth status 2>&1)",
+      "Bash(git init && git add . && git commit -m \"$\\(cat <<'EOF'\nInitial commit: TCG blueprint prototype\n\nReact + TypeScript + Vite tactical lane-based card game.\n5-lane board, 3 unit types, full turn/combat loop, smoke tests.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

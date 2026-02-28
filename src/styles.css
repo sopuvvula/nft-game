@@ -1,0 +1,28 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0d0d0d;
+  color: #eee;
+}
+
+button {
+  background: #1e1e1e;
+  color: #eee;
+  border: 1px solid #555;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: border-color 0.1s;
+}
+
+button:hover {
+  border-color: #4af;
+  background: #252525;
+}
+
+button:active {
+  background: #333;
+}
