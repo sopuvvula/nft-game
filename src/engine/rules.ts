@@ -22,6 +22,21 @@ export function isExposed(laneIndex: number, playerState: PlayerState): boolean 
   return playerState.frontline[laneIndex] === null;
 }
 
+// Returns lanes that have a Taunt unit on the defender's side (frontline or exposed backline).
+export function getTauntLanes(defenderPlayer: PlayerState): number[] {
+  const lanes: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    const fl = defenderPlayer.frontline[i];
+    if (fl && fl.keywords.includes('taunt')) { lanes.push(i); continue; }
+    // Exposed backline taunt also counts
+    if (!fl) {
+      const bl = defenderPlayer.backline[i];
+      if (bl && bl.keywords.includes('taunt')) lanes.push(i);
+    }
+  }
+  return lanes;
+}
+
 export function canAttack(
   state: GameState,
   attackerLane: number,
@@ -38,11 +53,28 @@ export function canAttack(
   if (attacker.hasAttacked) return { ok: false, reason: 'Unit already attacked this turn' };
   if (attackerRow === 'backline' && !isExposed(attackerLane, activePlayer))
     return { ok: false, reason: 'Backline unit is protected — frontline lane is occupied' };
+
+  // Taunt enforcement: if defender has Taunt units, must target one of those lanes
+  const opp = state.activePlayer === 'A' ? 'B' : 'A';
+  const defenderPlayer = state.players[opp];
+  const tauntLanes = getTauntLanes(defenderPlayer);
+  if (tauntLanes.length > 0 && !tauntLanes.includes(targetLane)) {
+    return { ok: false, reason: 'Must attack a lane with a Taunt unit' };
+  }
+
   return { ok: true };
 }
 
-export function applyDamageToUnit(unit: UnitInstance, damage: number): UnitInstance {
-  return { ...unit, currentHp: unit.currentHp - damage };
+// Apply damage to a unit, respecting Shield.
+// Returns { unit, absorbed } where absorbed = true if Shield blocked the hit.
+export function applyDamageToUnit(
+  unit: UnitInstance,
+  damage: number
+): { unit: UnitInstance; absorbed: boolean } {
+  if (unit.shieldActive) {
+    return { unit: { ...unit, shieldActive: false }, absorbed: true };
+  }
+  return { unit: { ...unit, currentHp: unit.currentHp - damage }, absorbed: false };
 }
 
 export function isUnitDead(unit: UnitInstance): boolean {

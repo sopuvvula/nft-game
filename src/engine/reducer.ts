@@ -23,6 +23,7 @@ function unitToCard(unit: UnitInstance): Card {
     cost: unit.cost,
     atk: unit.atk,
     hp: unit.maxHp,
+    keywords: unit.keywords,
   };
 }
 
@@ -72,6 +73,8 @@ export function reducer(state: GameState, action: Action): GameState {
         maxHp: card.hp,
         currentHp: card.hp,
         hasAttacked: false,
+        keywords: card.keywords,
+        shieldActive: card.keywords.includes('shield'),
       };
 
       const newRow = [...player[row]];
@@ -84,9 +87,10 @@ export function reducer(state: GameState, action: Action): GameState {
         [row]: newRow,
       };
 
+      const keywordNote = card.keywords.length > 0 ? ` [${card.keywords.join(', ')}]` : '';
       return addLog(
         { ...state, players: { ...state.players, [ap]: newPlayer }, selectedCardIndex: null },
-        `Player ${ap} played ${card.name} (ATK ${card.atk}/HP ${card.hp}) in ${row} lane ${laneIndex + 1}.`
+        `Player ${ap} played ${card.name} (ATK ${card.atk}/HP ${card.hp})${keywordNote} in ${row} lane ${laneIndex + 1}.`
       );
     }
 
@@ -147,17 +151,31 @@ export function reducer(state: GameState, action: Action): GameState {
       // Resolve target: frontline → backline → Core
       let newDefenderPlayer = { ...defenderPlayer };
       let logMsg: string;
+      const hasPiercing = attacker.keywords.includes('piercing');
 
       const flTarget = defenderPlayer.frontline[targetLaneIndex];
       const blTarget = defenderPlayer.backline[targetLaneIndex];
 
       if (flTarget) {
-        const damaged = applyDamageToUnit(flTarget, attacker.atk);
-        if (isUnitDead(damaged)) {
+        const { unit: damaged, absorbed } = applyDamageToUnit(flTarget, attacker.atk);
+        if (absorbed) {
+          const newFL = [...defenderPlayer.frontline];
+          newFL[targetLaneIndex] = damaged;
+          newDefenderPlayer = { ...defenderPlayer, frontline: newFL };
+          logMsg = `${attacker.name} hit ${flTarget.name} — Shield absorbed the hit!`;
+        } else if (isUnitDead(damaged)) {
           const newFL = [...defenderPlayer.frontline];
           newFL[targetLaneIndex] = null;
           newDefenderPlayer = { ...defenderPlayer, frontline: newFL, discard: [...defenderPlayer.discard, unitToCard(flTarget)] };
           logMsg = `${attacker.name} destroyed ${flTarget.name} (frontline lane ${targetLaneIndex + 1})!`;
+          // Piercing: overflow damage hits Core
+          if (hasPiercing) {
+            const overflow = attacker.atk - flTarget.currentHp;
+            if (overflow > 0) {
+              newDefenderPlayer = { ...newDefenderPlayer, coreHp: newDefenderPlayer.coreHp - overflow };
+              logMsg += ` Piercing: ${overflow} overflow damage to Core! (Core HP: ${newDefenderPlayer.coreHp})`;
+            }
+          }
         } else {
           const newFL = [...defenderPlayer.frontline];
           newFL[targetLaneIndex] = damaged;
@@ -166,12 +184,25 @@ export function reducer(state: GameState, action: Action): GameState {
         }
       } else if (blTarget) {
         // Frontline empty → backline exposed
-        const damaged = applyDamageToUnit(blTarget, attacker.atk);
-        if (isUnitDead(damaged)) {
+        const { unit: damaged, absorbed } = applyDamageToUnit(blTarget, attacker.atk);
+        if (absorbed) {
+          const newBL = [...defenderPlayer.backline];
+          newBL[targetLaneIndex] = damaged;
+          newDefenderPlayer = { ...defenderPlayer, backline: newBL };
+          logMsg = `${attacker.name} hit exposed ${blTarget.name} — Shield absorbed the hit!`;
+        } else if (isUnitDead(damaged)) {
           const newBL = [...defenderPlayer.backline];
           newBL[targetLaneIndex] = null;
           newDefenderPlayer = { ...defenderPlayer, backline: newBL, discard: [...defenderPlayer.discard, unitToCard(blTarget)] };
           logMsg = `${attacker.name} destroyed exposed ${blTarget.name} (backline lane ${targetLaneIndex + 1})!`;
+          // Piercing: overflow hits Core
+          if (hasPiercing) {
+            const overflow = attacker.atk - blTarget.currentHp;
+            if (overflow > 0) {
+              newDefenderPlayer = { ...newDefenderPlayer, coreHp: newDefenderPlayer.coreHp - overflow };
+              logMsg += ` Piercing: ${overflow} overflow damage to Core! (Core HP: ${newDefenderPlayer.coreHp})`;
+            }
+          }
         } else {
           const newBL = [...defenderPlayer.backline];
           newBL[targetLaneIndex] = damaged;

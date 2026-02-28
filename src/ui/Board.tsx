@@ -1,5 +1,5 @@
 import { GameState, UnitInstance, Player, Row } from '../engine/types';
-import { isExposed } from '../engine/rules';
+import { isExposed, getTauntLanes } from '../engine/rules';
 
 // Per-template color themes — same map used by Hand cards
 const THEMES: Record<string, { accent: string }> = {
@@ -8,10 +8,18 @@ const THEMES: Record<string, { accent: string }> = {
   'glass-cannon':  { accent: '#ff5050' },
   'sentinel':      { accent: '#2080d0' },
   'phantom':       { accent: '#d08030' },
+  'bulwark':       { accent: '#40a060' },
+  'lancer':        { accent: '#cc4444' },
 };
 function accent(templateId: string) {
   return THEMES[templateId]?.accent ?? '#555';
 }
+
+const KEYWORD_COLORS: Record<string, string> = {
+  taunt: '#f59e0b',
+  shield: '#38bdf8',
+  piercing: '#ef4444',
+};
 
 function HpBar({ current, max }: { current: number; max: number }) {
   const pct = Math.max(0, current / max);
@@ -83,6 +91,27 @@ function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, onClick }:
             <span style={{ color: '#86efac' }}>♥{unit.currentHp}</span>
           </div>
           <HpBar current={unit.currentHp} max={unit.maxHp} />
+          {unit.keywords.length > 0 && (
+            <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {unit.keywords.map(kw => (
+                <span key={kw} style={{
+                  fontSize: 7, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
+                  color: KEYWORD_COLORS[kw] ?? '#888',
+                  padding: '0 2px',
+                }}>
+                  {kw}
+                </span>
+              ))}
+            </div>
+          )}
+          {unit.shieldActive && (
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              borderRadius: 6, border: '1.5px solid #38bdf850',
+              boxShadow: 'inset 0 0 8px #38bdf830',
+              pointerEvents: 'none',
+            }} />
+          )}
           {unit.hasAttacked && (
             <div style={{ fontSize: 8, color: '#ef4444', fontWeight: 700, letterSpacing: 1 }}>SPENT</div>
           )}

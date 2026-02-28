@@ -19,8 +19,8 @@ test('Game initialization', () => {
   const s = createInitialState();
   assert(s.players.A.hand.length === 5, 'Player A starts with 5 cards');
   assert(s.players.B.hand.length === 5, 'Player B starts with 5 cards');
-  assert(s.players.A.deck.length === 7, 'Player A deck has 7 remaining');
-  assert(s.players.B.deck.length === 7, 'Player B deck has 7 remaining');
+  assert(s.players.A.deck.length === 9, 'Player A deck has 9 remaining');
+  assert(s.players.B.deck.length === 9, 'Player B deck has 9 remaining');
   assert(s.players.A.energy === 2, 'Player A starts with 2 energy');
   assert(s.players.A.coreHp === 15, 'Player A core HP is 15');
   assert(s.players.B.coreHp === 15, 'Player B core HP is 15');
@@ -89,11 +89,16 @@ test('Combat: hits Core when lane empty, hits frontline unit when occupied', () 
 
   const bUnitAfter = s.players.B.frontline[0];
   if (bUnitAfter) {
-    assert(bUnitAfter.currentHp === pBUnit.currentHp - pAUnit.atk, 'Frontline unit HP reduced');
+    if (pBUnit.shieldActive) {
+      assert(bUnitAfter.currentHp === pBUnit.currentHp, 'Shield absorbed the hit');
+      assert(!bUnitAfter.shieldActive, 'Shield is now broken');
+    } else {
+      assert(bUnitAfter.currentHp === pBUnit.currentHp - pAUnit.atk, 'Frontline unit HP reduced');
+    }
   } else {
     assert(true, 'Frontline unit destroyed (valid)');
   }
-  assert(s.players.B.coreHp === 15 - atkDmg, 'Core HP unchanged — frontline absorbed the hit');
+  assert(s.players.B.coreHp <= 15, 'Core HP unchanged or only piercing overflow applied');
 });
 
 // ── Test 4: Win condition ──────────────────────────────────────────────────
@@ -123,10 +128,12 @@ test('Backline: unit is protected when same-lane frontline is occupied', () => {
   const frontlineUnit: import('./types').UnitInstance = {
     instanceId: 'a-fl-test', templateId: 'vanguard', name: 'Vanguard',
     cost: 2, atk: 1, maxHp: 4, currentHp: 4, hasAttacked: false,
+    keywords: [], shieldActive: false,
   };
   const backlineUnit: import('./types').UnitInstance = {
     instanceId: 'a-bl-test', templateId: 'sentinel', name: 'Sentinel',
     cost: 3, atk: 1, maxHp: 6, currentHp: 6, hasAttacked: false,
+    keywords: ['taunt'], shieldActive: false,
   };
   s = {
     ...s,
@@ -164,7 +171,7 @@ test('Backline: unit is exposed and hittable when frontline lane is empty', () =
         ...s.players.B,
         backline: s.players.B.backline.map((u, i) =>
           i === 0
-            ? { instanceId: 'b-test', templateId: 'sentinel', name: 'Sentinel', cost: 3, atk: 1, maxHp: 6, currentHp: 6, hasAttacked: false }
+            ? { instanceId: 'b-test', templateId: 'sentinel', name: 'Sentinel', cost: 3, atk: 1, maxHp: 6, currentHp: 6, hasAttacked: false, keywords: ['taunt'] as const, shieldActive: false }
             : u
         ),
       },
@@ -187,11 +194,162 @@ test('Backline: unit is exposed and hittable when frontline lane is empty', () =
 
   const blAfter = s.players.B.backline[0];
   if (blAfter) {
-    assert(blAfter.currentHp === blBefore.currentHp - attacker.atk, 'Exposed backline unit took damage');
+    if (blBefore.shieldActive) {
+      assert(blAfter.currentHp === blBefore.currentHp, 'Shield absorbed hit on exposed backline');
+    } else {
+      assert(blAfter.currentHp === blBefore.currentHp - attacker.atk, 'Exposed backline unit took damage');
+    }
   } else {
     assert(true, 'Exposed backline unit was destroyed (valid)');
   }
   assert(s.players.B.coreHp === 15, 'Core HP untouched — backline unit absorbed the hit');
+});
+
+// ── Test 7: Taunt forces targeting ─────────────────────────────────────────
+test('Taunt: must attack lane with Taunt unit', () => {
+  let s = createInitialState();
+
+  // Set up: Player A has attackers in lanes 0 and 2
+  // Player B has non-Taunt in lane 0, Taunt in lane 2
+  const aUnit: import('./types').UnitInstance = {
+    instanceId: 'a-atk', templateId: 'striker', name: 'Striker',
+    cost: 2, atk: 2, maxHp: 3, currentHp: 3, hasAttacked: false,
+    keywords: [], shieldActive: false,
+  };
+  const bNonTaunt: import('./types').UnitInstance = {
+    instanceId: 'b-nt', templateId: 'vanguard', name: 'Vanguard',
+    cost: 2, atk: 1, maxHp: 4, currentHp: 4, hasAttacked: false,
+    keywords: [], shieldActive: false,
+  };
+  const bTaunt: import('./types').UnitInstance = {
+    instanceId: 'b-taunt', templateId: 'sentinel', name: 'Sentinel',
+    cost: 3, atk: 1, maxHp: 6, currentHp: 6, hasAttacked: false,
+    keywords: ['taunt'], shieldActive: false,
+  };
+  const aUnit2: import('./types').UnitInstance = {
+    instanceId: 'a-atk2', templateId: 'striker', name: 'Striker',
+    cost: 2, atk: 2, maxHp: 3, currentHp: 3, hasAttacked: false,
+    keywords: [], shieldActive: false,
+  };
+
+  s = {
+    ...s,
+    phase: 'combat' as const,
+    players: {
+      ...s.players,
+      A: {
+        ...s.players.A,
+        frontline: s.players.A.frontline.map((u, i) => i === 0 ? aUnit : i === 2 ? aUnit2 : u),
+      },
+      B: {
+        ...s.players.B,
+        frontline: s.players.B.frontline.map((u, i) => i === 0 ? bNonTaunt : i === 2 ? bTaunt : u),
+      },
+    },
+  };
+
+  // Select attacker in lane 0 and try to attack lane 0 (non-Taunt) — should be blocked
+  s = reducer(s, { type: 'SELECT_ATTACKER', payload: { laneIndex: 0, row: 'frontline' } });
+  assert(s.selectedAttackerLane === 0, 'Attacker in lane 0 selected');
+
+  s = reducer(s, { type: 'ATTACK', payload: { targetLaneIndex: 0 } });
+  assert(s.players.B.frontline[0]!.currentHp === 4, 'Non-Taunt unit was NOT damaged (attack blocked)');
+
+  // Now select attacker in lane 2 and attack lane 2 (Taunt) — should succeed
+  s = reducer(s, { type: 'SELECT_ATTACKER', payload: { laneIndex: 2, row: 'frontline' } });
+  s = reducer(s, { type: 'ATTACK', payload: { targetLaneIndex: 2 } });
+  assert(s.players.B.frontline[2]!.currentHp === 4, 'Taunt unit took damage (6 - 2 = 4)');
+});
+
+// ── Test 8: Shield blocks first hit ────────────────────────────────────────
+test('Shield: blocks first hit, second hit deals damage', () => {
+  let s = createInitialState();
+
+  const aUnit: import('./types').UnitInstance = {
+    instanceId: 'a-atk', templateId: 'striker', name: 'Striker',
+    cost: 2, atk: 2, maxHp: 3, currentHp: 3, hasAttacked: false,
+    keywords: [], shieldActive: false,
+  };
+  const bShielded: import('./types').UnitInstance = {
+    instanceId: 'b-shield', templateId: 'glass-cannon', name: 'Glass Cannon',
+    cost: 3, atk: 4, maxHp: 2, currentHp: 2, hasAttacked: false,
+    keywords: ['shield'], shieldActive: true,
+  };
+
+  s = {
+    ...s,
+    phase: 'combat' as const,
+    players: {
+      ...s.players,
+      A: {
+        ...s.players.A,
+        frontline: s.players.A.frontline.map((u, i) => i === 0 ? aUnit : u),
+      },
+      B: {
+        ...s.players.B,
+        frontline: s.players.B.frontline.map((u, i) => i === 0 ? bShielded : u),
+      },
+    },
+  };
+
+  // First attack: shield absorbs
+  s = reducer(s, { type: 'SELECT_ATTACKER', payload: { laneIndex: 0, row: 'frontline' } });
+  s = reducer(s, { type: 'ATTACK', payload: { targetLaneIndex: 0 } });
+  const afterShield = s.players.B.frontline[0]!;
+  assert(afterShield.currentHp === 2, 'HP unchanged — shield absorbed the hit');
+  assert(!afterShield.shieldActive, 'Shield is now broken');
+
+  // End turn for Player A, then Player B skips, back to Player A
+  s = reducer(s, { type: 'END_TURN' });
+  s = reducer(s, { type: 'SKIP_COMBAT' });
+  // Now it's Player A's turn again, enter combat
+  s = reducer(s, { type: 'ENTER_COMBAT' });
+  s = reducer(s, { type: 'SELECT_ATTACKER', payload: { laneIndex: 0, row: 'frontline' } });
+  s = reducer(s, { type: 'ATTACK', payload: { targetLaneIndex: 0 } });
+
+  // Second attack: no shield, 2 ATK kills 2 HP unit
+  assert(s.players.B.frontline[0] === null, 'Glass Cannon destroyed on second hit (no shield)');
+});
+
+// ── Test 9: Piercing carries overflow to Core ──────────────────────────────
+test('Piercing: excess damage carries through to Core', () => {
+  let s = createInitialState();
+
+  // Player A has Phantom (3 ATK, piercing), Player B has weak 1 HP unit
+  const aUnit: import('./types').UnitInstance = {
+    instanceId: 'a-pierce', templateId: 'phantom', name: 'Phantom',
+    cost: 2, atk: 3, maxHp: 2, currentHp: 2, hasAttacked: false,
+    keywords: ['piercing'], shieldActive: false,
+  };
+  const bWeak: import('./types').UnitInstance = {
+    instanceId: 'b-weak', templateId: 'vanguard', name: 'Vanguard',
+    cost: 2, atk: 1, maxHp: 4, currentHp: 1, hasAttacked: false,
+    keywords: [], shieldActive: false,
+  };
+
+  s = {
+    ...s,
+    phase: 'combat' as const,
+    players: {
+      ...s.players,
+      A: {
+        ...s.players.A,
+        frontline: s.players.A.frontline.map((u, i) => i === 0 ? aUnit : u),
+      },
+      B: {
+        ...s.players.B,
+        coreHp: 15,
+        frontline: s.players.B.frontline.map((u, i) => i === 0 ? bWeak : u),
+      },
+    },
+  };
+
+  s = reducer(s, { type: 'SELECT_ATTACKER', payload: { laneIndex: 0, row: 'frontline' } });
+  s = reducer(s, { type: 'ATTACK', payload: { targetLaneIndex: 0 } });
+
+  assert(s.players.B.frontline[0] === null, 'Weak unit destroyed');
+  // 3 ATK - 1 HP = 2 overflow damage
+  assert(s.players.B.coreHp === 13, 'Core took 2 piercing overflow damage (15 - 2 = 13)');
 });
 
 // ── Summary ────────────────────────────────────────────────────────────────

@@ -7,6 +7,14 @@ const CARD_THEMES: Record<string, { gradient: string; border: string; accent: st
   'glass-cannon':  { gradient: 'linear-gradient(175deg, #2a0808, #1a0505)', border: '#802020', accent: '#ff5050' },
   'sentinel':      { gradient: 'linear-gradient(175deg, #081020, #050a14)', border: '#102850', accent: '#2080d0' },
   'phantom':       { gradient: 'linear-gradient(175deg, #201208, #140b04)', border: '#604018', accent: '#d08030' },
+  'bulwark':       { gradient: 'linear-gradient(175deg, #0a2018, #061410)', border: '#1a6040', accent: '#40a060' },
+  'lancer':        { gradient: 'linear-gradient(175deg, #200808, #180404)', border: '#802020', accent: '#cc4444' },
+};
+
+const KEYWORD_COLORS: Record<string, string> = {
+  taunt: '#f59e0b',
+  shield: '#38bdf8',
+  piercing: '#ef4444',
 };
 function getTheme(templateId: string) {
   return CARD_THEMES[templateId] ?? { gradient: 'linear-gradient(175deg, #151520, #0f0f18)', border: '#333', accent: '#666' };
@@ -74,6 +82,20 @@ function CardView({ card, isSelected, canAfford, onClick }: CardViewProps) {
         <span style={{ color: '#fca5a5' }}>⚔ {card.atk}</span>
         <span style={{ color: '#86efac' }}>♥ {card.hp}</span>
       </div>
+
+      {/* Keywords */}
+      {card.keywords.length > 0 && (
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {card.keywords.map(kw => (
+            <span key={kw} style={{
+              fontSize: 8, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
+              color: KEYWORD_COLORS[kw] ?? '#888',
+            }}>
+              {kw}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Selection indicator */}
       {isSelected && (
