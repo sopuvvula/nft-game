@@ -1,31 +1,87 @@
 import { GameState, Card } from '../engine/types';
 import { canAffordCard } from '../engine/selectors';
 
+const CARD_THEMES: Record<string, { gradient: string; border: string; accent: string }> = {
+  'vanguard':      { gradient: 'linear-gradient(175deg, #0f2030, #0a1520)', border: '#1e5080', accent: '#4a9eff' },
+  'striker':       { gradient: 'linear-gradient(175deg, #1a0f30, #100820)', border: '#4a2080', accent: '#9060ff' },
+  'glass-cannon':  { gradient: 'linear-gradient(175deg, #2a0808, #1a0505)', border: '#802020', accent: '#ff5050' },
+  'sentinel':      { gradient: 'linear-gradient(175deg, #081020, #050a14)', border: '#102850', accent: '#2080d0' },
+  'phantom':       { gradient: 'linear-gradient(175deg, #201208, #140b04)', border: '#604018', accent: '#d08030' },
+};
+function getTheme(templateId: string) {
+  return CARD_THEMES[templateId] ?? { gradient: 'linear-gradient(175deg, #151520, #0f0f18)', border: '#333', accent: '#666' };
+}
+
 interface CardViewProps {
   card: Card;
-  index: number;
   isSelected: boolean;
   canAfford: boolean;
   onClick: () => void;
 }
 
 function CardView({ card, isSelected, canAfford, onClick }: CardViewProps) {
+  const theme = getTheme(card.templateId);
   return (
     <div
-      onClick={onClick}
+      onClick={canAfford ? onClick : undefined}
       style={{
-        border: `2px solid ${isSelected ? '#ff0' : canAfford ? '#4af' : '#444'}`,
-        background: isSelected ? '#2a2a1a' : '#111',
-        opacity: canAfford ? 1 : 0.5,
-        padding: '8px 10px',
-        minWidth: 90,
+        position: 'relative',
+        width: 78,
+        minHeight: 106,
+        borderRadius: 8,
+        border: `1.5px solid ${isSelected ? '#ffd700' : canAfford ? theme.border : '#1a1a1a'}`,
+        background: theme.gradient,
+        opacity: canAfford ? 1 : 0.4,
         cursor: canAfford ? 'pointer' : 'default',
-        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '22px 6px 10px',
+        gap: 5,
+        boxShadow: isSelected
+          ? `0 0 14px ${theme.accent}50, inset 0 1px 0 ${theme.accent}25`
+          : canAfford ? '0 2px 8px #00000080' : 'none',
+        transition: 'box-shadow 0.15s, border-color 0.15s, opacity 0.15s',
+        flexShrink: 0,
       }}
     >
-      <div style={{ fontWeight: 'bold', fontSize: 13 }}>{card.name}</div>
-      <div style={{ fontSize: 11, color: '#fa0' }}>Cost {card.cost}</div>
-      <div style={{ fontSize: 11 }}>ATK {card.atk} / HP {card.hp}</div>
+      {/* Top accent line */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+        background: theme.accent, opacity: canAfford ? 0.8 : 0.2,
+        borderRadius: '8px 8px 0 0',
+      }} />
+
+      {/* Cost badge */}
+      <div style={{
+        position: 'absolute', top: 7, left: 7,
+        width: 19, height: 19, borderRadius: '50%',
+        background: '#fbbf24', color: '#000',
+        fontSize: 10, fontWeight: 800,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {card.cost}
+      </div>
+
+      {/* Name */}
+      <div style={{ fontWeight: 700, fontSize: 11, color: '#e5e7eb', textAlign: 'center', lineHeight: 1.2 }}>
+        {card.name}
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: 'flex', gap: 8, fontSize: 11 }}>
+        <span style={{ color: '#fca5a5' }}>⚔ {card.atk}</span>
+        <span style={{ color: '#86efac' }}>♥ {card.hp}</span>
+      </div>
+
+      {/* Selection indicator */}
+      {isSelected && (
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 2,
+          background: '#ffd700', borderRadius: '0 0 8px 8px',
+        }} />
+      )}
     </div>
   );
 }
@@ -41,7 +97,7 @@ export function Hand({ state, onSelectCard }: HandProps) {
 
   if (phase !== 'main') {
     return (
-      <div style={{ color: '#555', fontSize: 12, padding: '4px 0' }}>
+      <div style={{ color: '#374151', fontSize: 12, padding: '6px 0', fontStyle: 'italic' }}>
         Hand hidden during Combat Phase.
       </div>
     );
@@ -49,22 +105,24 @@ export function Hand({ state, onSelectCard }: HandProps) {
 
   return (
     <div>
-      <div style={{ fontSize: 12, color: '#888', marginBottom: 6 }}>
-        Player {activePlayer} — Hand ({player.hand.length}) &nbsp;|&nbsp; Deck: {player.deck.length} &nbsp;|&nbsp; Discard: {player.discard.length}
+      <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 8, display: 'flex', gap: 12 }}>
+        <span>Player {activePlayer}</span>
+        <span style={{ color: '#374151' }}>Hand: {player.hand.length}</span>
+        <span style={{ color: '#374151' }}>Deck: {player.deck.length}</span>
+        <span style={{ color: '#374151' }}>Discard: {player.discard.length}</span>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {player.hand.map((card, i) => (
           <CardView
             key={card.instanceId}
             card={card}
-            index={i}
             isSelected={selectedCardIndex === i}
             canAfford={canAffordCard(state, i)}
             onClick={() => onSelectCard(i)}
           />
         ))}
         {player.hand.length === 0 && (
-          <div style={{ color: '#444', fontSize: 12 }}>No cards in hand.</div>
+          <div style={{ color: '#374151', fontSize: 12, fontStyle: 'italic' }}>No cards in hand.</div>
         )}
       </div>
     </div>
