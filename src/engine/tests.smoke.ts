@@ -119,25 +119,36 @@ test('Win condition triggers when Core reaches 0', () => {
 test('Backline: unit is protected when same-lane frontline is occupied', () => {
   let s = createInitialState();
 
-  // Player A places a unit in both frontline and backline lane 0
-  const hand = s.players.A.hand;
-  const fl = hand.findIndex(c => c.cost <= s.players.A.energy);
-  s = reducer(s, { type: 'SELECT_CARD', payload: { index: fl } });
-  s = reducer(s, { type: 'PLAY_CARD', payload: { laneIndex: 0, row: 'frontline' } });
+  // Inject both units directly so energy constraints don't affect the setup
+  const frontlineUnit: import('./types').UnitInstance = {
+    instanceId: 'a-fl-test', templateId: 'vanguard', name: 'Vanguard',
+    cost: 2, atk: 1, maxHp: 4, currentHp: 4, hasAttacked: false,
+  };
+  const backlineUnit: import('./types').UnitInstance = {
+    instanceId: 'a-bl-test', templateId: 'sentinel', name: 'Sentinel',
+    cost: 3, atk: 1, maxHp: 6, currentHp: 6, hasAttacked: false,
+  };
+  s = {
+    ...s,
+    players: {
+      ...s.players,
+      A: {
+        ...s.players.A,
+        frontline: s.players.A.frontline.map((u, i) => i === 0 ? frontlineUnit : u),
+        backline: s.players.A.backline.map((u, i) => i === 0 ? backlineUnit : u),
+      },
+    },
+  };
 
-  const bl = s.players.A.hand.findIndex(c => c.cost <= s.players.A.energy);
-  if (bl !== -1) {
-    s = reducer(s, { type: 'SELECT_CARD', payload: { index: bl } });
-    s = reducer(s, { type: 'PLAY_CARD', payload: { laneIndex: 0, row: 'backline' } });
-    assert(s.players.A.backline[0] !== null, 'Unit placed in backline lane 0');
-  }
+  assert(s.players.A.frontline[0] !== null, 'Frontline lane 0 occupied');
+  assert(s.players.A.backline[0] !== null, 'Backline lane 0 occupied');
 
   s = reducer(s, { type: 'ENTER_COMBAT' });
 
-  // Try to select the backline unit as attacker — should be blocked
-  const before = s.selectedAttackerLane;
+  // Attempt to select the protected backline unit — must fail
   s = reducer(s, { type: 'SELECT_ATTACKER', payload: { laneIndex: 0, row: 'backline' } });
-  assert(s.selectedAttackerLane === before, 'Backline unit cannot be selected as attacker when protected');
+  assert(s.selectedAttackerLane === null, 'Protected backline unit cannot be selected as attacker');
+  assert(s.selectedAttackerRow === null, 'No attacker row set');
 });
 
 // ── Test 6: Backline is exposed and attackable when frontline is empty ──────
