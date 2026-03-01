@@ -1,0 +1,93 @@
+/* ── Button styles ── */
+
+.tcg-btn {
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  letter-spacing: 0.5px;
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.2s;
+  position: relative;
+}
+
+.tcg-btn:hover {
+  filter: brightness(1.15);
+}
+
+.tcg-btn:active {
+  transform: translateY(2px);
+  filter: brightness(0.9);
+}
+
+.tcg-btn.combat {
+  background: linear-gradient(135deg, #450a0a, #7f1d1d);
+  border: 1px solid #991b1b;
+  border-bottom: 3px solid #450a0a;
+  color: #fecaca;
+  box-shadow: 0 2px 8px #00000060;
+}
+
+.tcg-btn.combat:hover {
+  box-shadow: 0 0 12px #ef444430;
+}
+
+.tcg-btn.skip {
+  background: linear-gradient(135deg, #111, #1a1a1a);
+  border: 1px solid #2a2a2a;
+  border-bottom: 3px solid #0a0a0a;
+  color: #6b7280;
+}
+
+.tcg-btn.end-turn {
+  background: linear-gradient(135deg, #0a1f45, #1e3a8a);
+  border: 1px solid #2563eb;
+  border-bottom: 3px solid #0a1530;
+  color: #bfdbfe;
+  box-shadow: 0 2px 8px #00000060;
+}
+
+.tcg-btn.end-turn:hover {
+  box-shadow: 0 0 12px #3b82f630;
+}
+
+.tcg-btn.new-game {
+  padding: 12px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #14532d, #166534);
+  border: 1px solid #22c55e;
+  border-bottom: 3px solid #0a2e18;
+  color: #bbf7d0;
+  margin-top: 16px;
+  box-shadow: 0 2px 8px #00000060;
+}
+
+.tcg-btn.new-game:hover {
+  box-shadow: 0 0 16px #22c55e30;
+}
+
+/* Win screen */
+.win-screen {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.win-text {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 900;
+  color: #fbbf24;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px #fbbf2460, 0 0 40px #fbbf2420;
+}
+
+.win-subtitle {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 4px;
+  letter-spacing: 1px;
+}

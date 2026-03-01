@@ -1,0 +1,130 @@
+/* ── Board lane & unit styles ── */
+
+.board-lane {
+  flex: 1;
+  border-radius: 6px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: opacity 0.2s, border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  overflow: hidden;
+  position: relative;
+  min-height: 70px;
+}
+
+/* Empty lane slot */
+.board-lane.empty {
+  box-shadow: inset 0 2px 8px #00000060;
+}
+
+.board-lane.empty .lane-plus {
+  color: #1a1a1a;
+  font-size: 18px;
+  transition: color 0.2s;
+}
+
+.board-lane.empty:hover .lane-plus {
+  color: #2a2a2a;
+}
+
+/* Taunt pulse on lane */
+.board-lane.taunt-target {
+  animation: tauntPulse 1.5s ease-in-out infinite;
+}
+
+/* Shield shimmer overlay */
+.shield-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 6px;
+  border: 1.5px solid #38bdf850;
+  box-shadow: inset 0 0 10px #38bdf830;
+  pointer-events: none;
+  animation: shieldShimmer 2s ease-in-out infinite;
+}
+
+/* Unit mini card */
+.board-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  width: 100%;
+}
+
+/* Mini stat orbs on board units */
+.mini-stat-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 2px;
+  margin-top: 1px;
+}
+
+.mini-stat {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  box-shadow: 0 1px 3px #00000060;
+}
+
+.mini-stat.atk {
+  background: radial-gradient(circle at 35% 35%, #fca5a5, #ef4444 50%, #b91c1c 100%);
+  color: #fff;
+}
+
+.mini-stat.hp {
+  background: radial-gradient(circle at 35% 35%, #86efac, #22c55e 50%, #15803d 100%);
+  color: #fff;
+}
+
+/* Spent indicator */
+.spent-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 6px;
+  background: #ef444420;
+  pointer-events: none;
+}
+
+/* Energy diamond */
+.energy-diamond {
+  width: 12px;
+  height: 12px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.energy-diamond.filled {
+  background: radial-gradient(circle at 35% 35%, #fde68a, #fbbf24 50%, #d97706 100%);
+  box-shadow: 0 0 4px #fbbf2460;
+}
+
+.energy-diamond.empty {
+  background: #181818;
+  border: 1px solid #222;
+}
+
+/* Player row background */
+.board-row {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+/* Active player territory glow */
+.territory-active {
+  box-shadow: inset 0 0 20px #ffd70008;
+}

@@ -1,17 +1,18 @@
 import { useEffect, useRef } from 'react';
+import './Log.css';
 
-function getLogStyle(msg: string): { color: string; background: string } {
-  if (msg.toLowerCase().includes('wins'))   return { color: '#fbbf24', background: '#1a120010' };
-  if (msg.includes('destroyed'))            return { color: '#f97316', background: 'transparent' };
+function getLogType(msg: string): { color: string; type: string } {
+  if (msg.toLowerCase().includes('wins'))   return { color: '#fbbf24', type: 'win' };
+  if (msg.includes('destroyed'))            return { color: '#f97316', type: 'destroy' };
   if (msg.includes('dmg') || msg.includes('hit') || msg.includes('Core'))
-                                            return { color: '#f87171', background: 'transparent' };
+                                            return { color: '#f87171', type: 'damage' };
   if (msg.includes("'s turn") || msg.includes('Game started'))
-                                            return { color: '#60a5fa', background: 'transparent' };
-  if (msg.includes('played'))               return { color: '#4ade80', background: 'transparent' };
+                                            return { color: '#60a5fa', type: 'turn' };
+  if (msg.includes('played'))               return { color: '#4ade80', type: 'play' };
   if (msg.includes('Combat') || msg.includes('combat'))
-                                            return { color: '#fb923c', background: 'transparent' };
-  if (msg.includes('skipped'))              return { color: '#6b7280', background: 'transparent' };
-  return                                           { color: '#374151', background: 'transparent' };
+                                            return { color: '#fb923c', type: 'combat' };
+  if (msg.includes('skipped'))              return { color: '#6b7280', type: 'skip' };
+  return                                           { color: '#374151', type: 'default' };
 }
 
 interface LogProps {
@@ -28,13 +29,9 @@ export function Log({ messages }: LogProps) {
   return (
     <div ref={ref} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
       {messages.map((msg, i) => {
-        const style = getLogStyle(msg);
+        const { color, type } = getLogType(msg);
         return (
-          <div key={i} style={{
-            fontSize: 11, lineHeight: 1.5, padding: '3px 4px',
-            color: style.color, background: style.background,
-            borderRadius: 2, fontFamily: 'monospace',
-          }}>
+          <div key={i} className={`log-entry type-${type}`} style={{ color }}>
             {msg}
           </div>
         );
