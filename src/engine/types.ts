@@ -1,6 +1,7 @@
 export type Player = 'A' | 'B';
 export type Phase = 'main' | 'combat';
 export type Row = 'frontline' | 'backline';
+export type Keyword = 'taunt' | 'shield' | 'piercing';
 
 export interface Card {
   instanceId: string;
@@ -9,6 +10,7 @@ export interface Card {
   cost: number;
   atk: number;
   hp: number;
+  keywords: Keyword[];
 }
 
 export interface UnitInstance {
@@ -20,6 +22,8 @@ export interface UnitInstance {
   maxHp: number;
   currentHp: number;
   hasAttacked: boolean;
+  keywords: Keyword[];
+  shieldActive: boolean;
 }
 
 export interface PlayerState {

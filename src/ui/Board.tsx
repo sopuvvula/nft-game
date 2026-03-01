@@ -1,5 +1,5 @@
 import { GameState, UnitInstance, Player, Row } from '../engine/types';
-import { isExposed } from '../engine/rules';
+import { isExposed, getTauntLanes } from '../engine/rules';
 
 // Per-template color themes — same map used by Hand cards
 const THEMES: Record<string, { accent: string }> = {
@@ -8,10 +8,18 @@ const THEMES: Record<string, { accent: string }> = {
   'glass-cannon':  { accent: '#ff5050' },
   'sentinel':      { accent: '#2080d0' },
   'phantom':       { accent: '#d08030' },
+  'bulwark':       { accent: '#40a060' },
+  'lancer':        { accent: '#cc4444' },
 };
 function accent(templateId: string) {
   return THEMES[templateId]?.accent ?? '#555';
 }
+
+const KEYWORD_COLORS: Record<string, string> = {
+  taunt: '#f59e0b',
+  shield: '#38bdf8',
+  piercing: '#ef4444',
+};
 
 function HpBar({ current, max }: { current: number; max: number }) {
   const pct = Math.max(0, current / max);
@@ -29,17 +37,19 @@ interface LaneProps {
   isSelected: boolean;
   isAttacker: boolean;
   isProtected: boolean;
+  isTauntTarget: boolean;
   onClick: () => void;
 }
 
-function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, onClick }: LaneProps) {
+function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, isTauntTarget, onClick }: LaneProps) {
   let border = '1.5px solid #161616';
   let bg = '#080808';
   let shadow = 'inset 0 1px 4px #00000060';
 
-  if (isSelected)      { border = '1.5px solid #ffd700'; bg = '#12100a'; shadow = '0 0 10px #ffd70050'; }
-  else if (isAttacker) { border = '1.5px solid #3b82f6'; bg = '#08090f'; shadow = '0 0 8px #3b82f620'; }
-  else if (unit)       { border = '1.5px solid #1e1e1e'; bg = '#0c0c0c'; shadow = '0 1px 3px #00000040'; }
+  if (isSelected)         { border = '1.5px solid #ffd700'; bg = '#12100a'; shadow = '0 0 10px #ffd70050'; }
+  else if (isTauntTarget) { border = '1.5px solid #f59e0b'; bg = '#0f0c06'; shadow = '0 0 8px #f59e0b30'; }
+  else if (isAttacker)    { border = '1.5px solid #3b82f6'; bg = '#08090f'; shadow = '0 0 8px #3b82f620'; }
+  else if (unit)          { border = '1.5px solid #1e1e1e'; bg = '#0c0c0c'; shadow = '0 1px 3px #00000040'; }
 
   return (
     <div
@@ -83,6 +93,27 @@ function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, onClick }:
             <span style={{ color: '#86efac' }}>♥{unit.currentHp}</span>
           </div>
           <HpBar current={unit.currentHp} max={unit.maxHp} />
+          {unit.keywords.length > 0 && (
+            <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {unit.keywords.map(kw => (
+                <span key={kw} style={{
+                  fontSize: 7, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
+                  color: KEYWORD_COLORS[kw] ?? '#888',
+                  padding: '0 2px',
+                }}>
+                  {kw}
+                </span>
+              ))}
+            </div>
+          )}
+          {unit.shieldActive && (
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              borderRadius: 6, border: '1.5px solid #38bdf850',
+              boxShadow: 'inset 0 0 8px #38bdf830',
+              pointerEvents: 'none',
+            }} />
+          )}
           {unit.hasAttacked && (
             <div style={{ fontSize: 8, color: '#ef4444', fontWeight: 700, letterSpacing: 1 }}>SPENT</div>
           )}
@@ -117,12 +148,16 @@ export function Board({ state, onLaneClick }: BoardProps) {
   function renderRow(p: Player, row: Row) {
     const pl = players[p];
     const inCombat = phase === 'combat' && p === activePlayer;
+    // Show Taunt indicator on opponent's lanes when active player has an attacker selected
+    const isOpponentRow = phase === 'combat' && p !== activePlayer;
+    const tauntLanes = isOpponentRow && selectedAttackerLane !== null ? getTauntLanes(pl) : [];
     return (
       <div style={{ flex: 1, display: 'flex', gap: 4 }}>
         {pl[row].map((unit, i) => {
           const protected_ = row === 'backline' && !isExposed(i, pl);
           const canAtk = inCombat && !!unit && !unit.hasAttacked && !protected_;
           const isSel = inCombat && selectedAttackerLane === i && selectedAttackerRow === row;
+          const isTaunt = isOpponentRow && tauntLanes.length > 0 && tauntLanes.includes(i) && !!unit;
           return (
             <Lane
               key={i}
@@ -131,6 +166,7 @@ export function Board({ state, onLaneClick }: BoardProps) {
               isSelected={isSel}
               isAttacker={canAtk}
               isProtected={protected_}
+              isTauntTarget={isTaunt}
               onClick={() => onLaneClick(p, row, i)}
             />
           );

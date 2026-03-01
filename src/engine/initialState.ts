@@ -1,4 +1,4 @@
-import { GameState, PlayerState, Card, Player } from './types';
+import { GameState, PlayerState, Card, Player, Keyword } from './types';
 
 interface CardTemplate {
   templateId: string;
@@ -6,23 +6,28 @@ interface CardTemplate {
   cost: number;
   atk: number;
   hp: number;
+  keywords: Keyword[];
 }
 
 const CARD_TEMPLATES: CardTemplate[] = [
-  { templateId: 'vanguard',     name: 'Vanguard',     cost: 2, atk: 1, hp: 4 },
-  { templateId: 'striker',      name: 'Striker',      cost: 2, atk: 2, hp: 3 },
-  { templateId: 'glass-cannon', name: 'Glass Cannon', cost: 3, atk: 4, hp: 2 },
-  { templateId: 'sentinel',     name: 'Sentinel',     cost: 3, atk: 1, hp: 6 },
-  { templateId: 'phantom',      name: 'Phantom',      cost: 2, atk: 3, hp: 2 },
+  { templateId: 'vanguard',     name: 'Vanguard',     cost: 2, atk: 1, hp: 4, keywords: [] },
+  { templateId: 'striker',      name: 'Striker',      cost: 2, atk: 2, hp: 3, keywords: [] },
+  { templateId: 'glass-cannon', name: 'Glass Cannon', cost: 3, atk: 4, hp: 2, keywords: ['shield'] },
+  { templateId: 'sentinel',     name: 'Sentinel',     cost: 3, atk: 1, hp: 6, keywords: ['taunt'] },
+  { templateId: 'phantom',      name: 'Phantom',      cost: 2, atk: 3, hp: 2, keywords: ['piercing'] },
+  { templateId: 'bulwark',      name: 'Bulwark',      cost: 3, atk: 0, hp: 5, keywords: ['taunt'] },
+  { templateId: 'lancer',       name: 'Lancer',       cost: 3, atk: 3, hp: 3, keywords: ['piercing'] },
 ];
 
-// 12-card deck: 3 + 3 + 2 + 2 + 2
+// 14-card deck: 3 + 2 + 2 + 2 + 2 + 2 + 1
 const COPIES: Record<string, number> = {
   vanguard: 3,
-  striker: 3,
+  striker: 2,
   'glass-cannon': 2,
   sentinel: 2,
   phantom: 2,
+  bulwark: 2,
+  lancer: 1,
 };
 
 function shuffle<T>(arr: T[]): T[] {
@@ -45,6 +50,7 @@ function buildDeck(playerPrefix: Player): Card[] {
         cost: t.cost,
         atk: t.atk,
         hp: t.hp,
+        keywords: t.keywords,
       });
     }
   }
