@@ -88,6 +88,7 @@ test('Combat: hits Core when lane empty, hits frontline unit when occupied', () 
   s = reducer(s, { type: 'ATTACK', payload: { targetLaneIndex: 0 } });
 
   const bUnitAfter = s.players.B.frontline[0];
+  let expectedCoreHp = 15 - atkDmg; // from first attack on empty lane
   if (bUnitAfter) {
     if (pBUnit.shieldActive) {
       assert(bUnitAfter.currentHp === pBUnit.currentHp, 'Shield absorbed the hit');
@@ -96,9 +97,14 @@ test('Combat: hits Core when lane empty, hits frontline unit when occupied', () 
       assert(bUnitAfter.currentHp === pBUnit.currentHp - pAUnit.atk, 'Frontline unit HP reduced');
     }
   } else {
+    // Unit was destroyed — if attacker has piercing, overflow hits Core
+    if (pAUnit.keywords.includes('piercing')) {
+      const overflow = pAUnit.atk - pBUnit.currentHp;
+      if (overflow > 0) expectedCoreHp -= overflow;
+    }
     assert(true, 'Frontline unit destroyed (valid)');
   }
-  assert(s.players.B.coreHp <= 15, 'Core HP unchanged or only piercing overflow applied');
+  assert(s.players.B.coreHp === expectedCoreHp, `Core HP is ${expectedCoreHp} — frontline absorbed the hit (piercing overflow if applicable)`);
 });
 
 // ── Test 4: Win condition ──────────────────────────────────────────────────

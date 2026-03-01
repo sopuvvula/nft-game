@@ -37,17 +37,19 @@ interface LaneProps {
   isSelected: boolean;
   isAttacker: boolean;
   isProtected: boolean;
+  isTauntTarget: boolean;
   onClick: () => void;
 }
 
-function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, onClick }: LaneProps) {
+function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, isTauntTarget, onClick }: LaneProps) {
   let border = '1.5px solid #161616';
   let bg = '#080808';
   let shadow = 'inset 0 1px 4px #00000060';
 
-  if (isSelected)      { border = '1.5px solid #ffd700'; bg = '#12100a'; shadow = '0 0 10px #ffd70050'; }
-  else if (isAttacker) { border = '1.5px solid #3b82f6'; bg = '#08090f'; shadow = '0 0 8px #3b82f620'; }
-  else if (unit)       { border = '1.5px solid #1e1e1e'; bg = '#0c0c0c'; shadow = '0 1px 3px #00000040'; }
+  if (isSelected)         { border = '1.5px solid #ffd700'; bg = '#12100a'; shadow = '0 0 10px #ffd70050'; }
+  else if (isTauntTarget) { border = '1.5px solid #f59e0b'; bg = '#0f0c06'; shadow = '0 0 8px #f59e0b30'; }
+  else if (isAttacker)    { border = '1.5px solid #3b82f6'; bg = '#08090f'; shadow = '0 0 8px #3b82f620'; }
+  else if (unit)          { border = '1.5px solid #1e1e1e'; bg = '#0c0c0c'; shadow = '0 1px 3px #00000040'; }
 
   return (
     <div
@@ -146,12 +148,16 @@ export function Board({ state, onLaneClick }: BoardProps) {
   function renderRow(p: Player, row: Row) {
     const pl = players[p];
     const inCombat = phase === 'combat' && p === activePlayer;
+    // Show Taunt indicator on opponent's lanes when active player has an attacker selected
+    const isOpponentRow = phase === 'combat' && p !== activePlayer;
+    const tauntLanes = isOpponentRow && selectedAttackerLane !== null ? getTauntLanes(pl) : [];
     return (
       <div style={{ flex: 1, display: 'flex', gap: 4 }}>
         {pl[row].map((unit, i) => {
           const protected_ = row === 'backline' && !isExposed(i, pl);
           const canAtk = inCombat && !!unit && !unit.hasAttacked && !protected_;
           const isSel = inCombat && selectedAttackerLane === i && selectedAttackerRow === row;
+          const isTaunt = isOpponentRow && tauntLanes.length > 0 && tauntLanes.includes(i) && !!unit;
           return (
             <Lane
               key={i}
@@ -160,6 +166,7 @@ export function Board({ state, onLaneClick }: BoardProps) {
               isSelected={isSel}
               isAttacker={canAtk}
               isProtected={protected_}
+              isTauntTarget={isTaunt}
               onClick={() => onLaneClick(p, row, i)}
             />
           );
