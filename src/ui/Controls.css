@@ -71,23 +71,30 @@
 /* Win screen */
 .win-screen {
   text-align: center;
-  padding: 20px 0;
+  padding: 24px 0;
 }
 
 .win-text {
   font-family: var(--font-heading);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 900;
   color: #fbbf24;
-  letter-spacing: 3px;
+  letter-spacing: 5px;
   text-transform: uppercase;
-  text-shadow: 0 0 20px #fbbf2460, 0 0 40px #fbbf2420;
+  text-shadow: 0 0 20px #fbbf2460, 0 0 40px #fbbf2430, 0 0 80px #fbbf2418, 0 2px 4px #000;
+  animation: victoryPulse 2s ease-in-out infinite alternate;
 }
 
 .win-subtitle {
   font-family: var(--font-heading);
   font-size: 14px;
-  color: #6b7280;
-  margin-top: 4px;
-  letter-spacing: 1px;
+  color: #9ca3af;
+  margin-top: 6px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px #ffffff10;
+}
+
+@keyframes victoryPulse {
+  0% { text-shadow: 0 0 20px #fbbf2460, 0 0 40px #fbbf2430, 0 0 80px #fbbf2418, 0 2px 4px #000; }
+  100% { text-shadow: 0 0 30px #fbbf2480, 0 0 60px #fbbf2440, 0 0 100px #fbbf2420, 0 2px 4px #000; }
 }

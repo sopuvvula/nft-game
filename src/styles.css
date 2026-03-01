@@ -82,13 +82,6 @@ button:active { transform: translateY(1px); filter: brightness(0.9); }
   100% { opacity: 0; transform: translateY(-10px) scale(0.95); }
 }
 
-@keyframes particleFloat {
-  0%   { transform: translateY(0) translateX(0); opacity: 0; }
-  10%  { opacity: 0.6; }
-  90%  { opacity: 0; }
-  100% { transform: translateY(-120px) translateX(20px); opacity: 0; }
-}
-
 @keyframes hpFlash {
   0%   { opacity: 0.8; }
   100% { opacity: 0; width: 0%; }

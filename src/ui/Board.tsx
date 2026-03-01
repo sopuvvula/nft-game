@@ -29,12 +29,12 @@ function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, isTauntTar
 
   let borderColor = '#161616';
   let bg = BOARD.emptyLane;
-  let shadow = 'inset 0 2px 8px #00000060';
+  let shadow = 'inset 0 3px 12px #000000a0';
 
-  if (isSelected)         { borderColor = '#ffd700'; bg = '#12100a'; shadow = '0 0 12px #ffd70050'; }
-  else if (isTauntTarget) { borderColor = '#f59e0b80'; bg = '#0f0c06'; shadow = '0 0 8px #f59e0b30'; }
-  else if (isAttacker)    { borderColor = '#3b82f6'; bg = '#08090f'; shadow = '0 0 8px #3b82f620'; }
-  else if (unit && theme) { borderColor = theme.border + '80'; bg = theme.darkAccent; shadow = `0 1px 4px #00000050, inset 0 1px 0 ${theme.accent}08`; }
+  if (isSelected)         { borderColor = '#ffd700'; bg = '#18150a'; shadow = '0 0 16px #ffd70060, inset 0 0 12px #ffd70010'; }
+  else if (isTauntTarget) { borderColor = '#f59e0b80'; bg = '#12100a'; shadow = '0 0 10px #f59e0b30, inset 0 0 8px #f59e0b08'; }
+  else if (isAttacker)    { borderColor = '#3b82f6'; bg = '#0a0c14'; shadow = '0 0 10px #3b82f620, inset 0 0 8px #3b82f608'; }
+  else if (unit && theme) { borderColor = theme.border + '60'; bg = `linear-gradient(180deg, ${theme.darkAccent}, ${theme.artBg})`; shadow = `0 2px 8px #00000060, inset 0 1px 0 ${theme.accent}10`; }
 
   const classes = ['board-lane'];
   if (!unit) classes.push('empty');
@@ -53,14 +53,15 @@ function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, isTauntTar
       }}
     >
       {/* Lane number */}
-      <div style={{ fontSize: 7, color: '#1e1e1e', letterSpacing: 1, fontFamily: FONT_BODY }}>{laneIndex + 1}</div>
+      <div style={{ fontSize: 7, color: '#ffffff0a', letterSpacing: 1, fontFamily: FONT_BODY }}>{laneIndex + 1}</div>
 
       {unit && theme ? (
         <div className="board-unit">
           {/* Accent stripe */}
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-            background: theme.accent, opacity: 0.6, borderRadius: '6px 6px 0 0',
+            background: `linear-gradient(90deg, transparent, ${theme.accent}80, transparent)`,
+            borderRadius: '6px 6px 0 0',
           }} />
 
           {/* Mini art */}
@@ -70,7 +71,7 @@ function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, isTauntTar
           <div style={{
             fontFamily: FONT_HEADING, fontWeight: 700, fontSize: 8,
             color: '#d1d5db', textAlign: 'center', lineHeight: 1.2,
-            textShadow: `0 0 4px ${theme.accent}30`,
+            textShadow: `0 0 6px ${theme.accent}30, 0 1px 1px #000`,
             maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             padding: '0 2px',
           }}>
@@ -88,6 +89,7 @@ function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, isTauntTar
                   fontSize: 6, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase',
                   color: KEYWORD_COLORS[kw] ?? '#888',
                   fontFamily: FONT_BODY,
+                  textShadow: `0 0 4px ${KEYWORD_COLORS[kw] ?? '#888'}30`,
                 }}>
                   {kw}
                 </span>
@@ -110,6 +112,7 @@ function Lane({ unit, laneIndex, isSelected, isAttacker, isProtected, isTauntTar
             <div style={{
               fontSize: 7, color: '#ef4444', fontWeight: 700, letterSpacing: 1,
               fontFamily: FONT_BODY, textTransform: 'uppercase',
+              textShadow: '0 0 4px #ef444440',
             }}>SPENT</div>
           )}
         </div>
@@ -188,24 +191,9 @@ export function Board({ state, onLaneClick }: BoardProps) {
     const hpColor = hpPct > 0.55 ? '#22c55e' : hpPct > 0.3 ? '#eab308' : '#ef4444';
 
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '5px 4px', flexShrink: 0,
-      }}>
+      <div className={`player-hud ${active ? 'active' : ''}`}>
         {/* Player avatar */}
-        <div style={{
-          width: 28, height: 28, borderRadius: '50%',
-          background: active
-            ? 'radial-gradient(circle at 40% 40%, #fde68a, #d97706)'
-            : 'linear-gradient(135deg, #1a1a2e, #16213e)',
-          border: `2px solid ${active ? '#fbbf24' : '#1e293b'}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: active ? 14 : 12,
-          color: active ? '#000' : '#4b5563',
-          fontFamily: FONT_HEADING, fontWeight: 700,
-          boxShadow: active ? '0 0 8px #fbbf2440' : 'none',
-          flexShrink: 0,
-        }}>
+        <div className={`player-avatar ${active ? 'active' : 'inactive'}`}>
           {active ? (
             <svg viewBox="0 0 24 24" width={14} height={14}>
               <path d="M2 18 L5 8 L8 13 L12 4 L16 13 L19 8 L22 18 Z"
@@ -222,27 +210,27 @@ export function Board({ state, onLaneClick }: BoardProps) {
           color: active ? '#e5e7eb' : '#374151',
           fontFamily: FONT_HEADING,
           minWidth: 60, letterSpacing: 0.5,
+          textShadow: active ? '0 0 8px #ffffff10' : 'none',
         }}>
           Player {p}
         </span>
 
         {/* HP bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
-          <div style={{
-            flex: 1, height: 8, background: '#111', borderRadius: 4, overflow: 'hidden',
-            border: '1px solid #1a1a1a', position: 'relative',
-          }}>
-            <div style={{
-              width: `${hpPct * 100}%`, height: '100%',
-              background: `linear-gradient(90deg, ${hpColor}cc, ${hpColor})`,
-              borderRadius: 3, transition: 'width 0.4s',
-            }} />
+          <div className="hp-bar-container">
+            <div
+              className="hp-bar-fill"
+              style={{
+                width: `${hpPct * 100}%`,
+                background: `linear-gradient(90deg, ${hpColor}aa, ${hpColor})`,
+              }}
+            />
           </div>
           <span style={{
-            fontSize: 13, color: hpColor, fontWeight: 800,
+            fontSize: 14, color: hpColor, fontWeight: 800,
             minWidth: 24, textAlign: 'right',
             fontFamily: FONT_HEADING,
-            textShadow: `0 0 8px ${hpColor}40`,
+            textShadow: `0 0 10px ${hpColor}50, 0 1px 2px #000`,
           }}>
             {pl.coreHp}
           </span>
@@ -259,6 +247,7 @@ export function Board({ state, onLaneClick }: BoardProps) {
           <span style={{
             fontSize: 10, color: '#fbbf24', fontWeight: 700,
             fontFamily: FONT_HEADING, marginLeft: 2,
+            textShadow: '0 0 6px #fbbf2430',
           }}>
             {pl.energy}
           </span>
@@ -271,34 +260,41 @@ export function Board({ state, onLaneClick }: BoardProps) {
   const aActive = activePlayer === 'A';
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <div className="board-surface">
       <PlayerInfo p="B" />
-      <RowLabel label="Backline" active={bActive} />
-      {renderRow('B', 'backline')}
-      <RowLabel label="Frontline" active={bActive} />
-      {renderRow('B', 'frontline')}
 
-      {/* Center divider — battlefield line */}
-      <div style={{ flexShrink: 0, margin: '4px 0', position: 'relative' }}>
-        <div style={{
-          height: 1,
-          background: `linear-gradient(90deg, transparent, ${BOARD.divider} 15%, ${BOARD.divider}cc 50%, ${BOARD.divider} 85%, transparent)`,
-        }} />
-        <div style={{
-          position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)',
-          fontSize: 8, letterSpacing: 3, color: BOARD.divider, fontWeight: 700,
-          textTransform: 'uppercase', whiteSpace: 'nowrap',
-          textShadow: `0 0 8px ${BOARD.divider}80`,
-          fontFamily: FONT_HEADING,
-        }}>
-          battlefield
+      <div className="board-playfield">
+        <RowLabel label="Backline" active={bActive} />
+        {renderRow('B', 'backline')}
+        <RowLabel label="Frontline" active={bActive} />
+        {renderRow('B', 'frontline')}
+
+        {/* Battlefield divider */}
+        <div className="battlefield-divider">
+          <div className="divider-line" />
+          <div className="divider-label">
+            <div className="divider-dash" style={{
+              background: `linear-gradient(90deg, transparent, ${BOARD.divider}60)`,
+            }} />
+            <span className="divider-text" style={{
+              color: BOARD.divider,
+              textShadow: `0 0 12px ${BOARD.divider}60`,
+              border: `1px solid ${BOARD.divider}20`,
+            }}>
+              battlefield
+            </span>
+            <div className="divider-dash" style={{
+              background: `linear-gradient(270deg, transparent, ${BOARD.divider}60)`,
+            }} />
+          </div>
         </div>
+
+        <RowLabel label="Frontline" active={aActive} />
+        {renderRow('A', 'frontline')}
+        <RowLabel label="Backline" active={aActive} />
+        {renderRow('A', 'backline')}
       </div>
 
-      <RowLabel label="Frontline" active={aActive} />
-      {renderRow('A', 'frontline')}
-      <RowLabel label="Backline" active={aActive} />
-      {renderRow('A', 'backline')}
       <PlayerInfo p="A" />
     </div>
   );

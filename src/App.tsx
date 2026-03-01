@@ -6,27 +6,10 @@ import { Board } from './ui/Board';
 import { Hand } from './ui/Hand';
 import { Controls } from './ui/Controls';
 import { Log } from './ui/Log';
+import { ArenaBackground } from './ui/ArenaBackground';
 import { FONT_HEADING, FONT_BODY, BOARD } from './ui/theme';
 
-// Ambient floating particle
-function Particle({ delay, left }: { delay: number; left: number }) {
-  return (
-    <div style={{
-      position: 'absolute',
-      left: `${left}%`,
-      bottom: 0,
-      width: 2,
-      height: 2,
-      borderRadius: '50%',
-      background: '#ffffff',
-      opacity: 0,
-      animation: `particleFloat ${6 + Math.random() * 4}s ${delay}s linear infinite`,
-      pointerEvents: 'none',
-    }} />
-  );
-}
-
-// Turn transition banner
+// Turn transition banner — cinematic
 function TurnBanner({ player, show }: { player: Player; show: boolean }) {
   if (!show) return null;
   return (
@@ -35,17 +18,24 @@ function TurnBanner({ player, show }: { player: Player; show: boolean }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       pointerEvents: 'none',
       animation: 'fadeInOut 1.4s ease-in-out forwards',
+      background: 'linear-gradient(180deg, transparent 30%, #00000040 50%, transparent 70%)',
     }}>
-      <div style={{
-        fontFamily: FONT_HEADING,
-        fontSize: 32,
-        fontWeight: 900,
-        color: '#fbbf24',
-        letterSpacing: 4,
-        textTransform: 'uppercase',
-        textShadow: '0 0 30px #fbbf2460, 0 0 60px #fbbf2420, 0 2px 4px #000',
-      }}>
-        Player {player}'s Turn
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          fontFamily: FONT_HEADING,
+          fontSize: 36,
+          fontWeight: 900,
+          color: '#fbbf24',
+          letterSpacing: 6,
+          textTransform: 'uppercase',
+          textShadow: '0 0 30px #fbbf2460, 0 0 60px #fbbf2430, 0 0 100px #fbbf2418, 0 2px 4px #000',
+        }}>
+          Player {player}'s Turn
+        </div>
+        <div style={{
+          width: 120, height: 1, margin: '8px auto 0',
+          background: 'linear-gradient(90deg, transparent, #fbbf2460, transparent)',
+        }} />
       </div>
     </div>
   );
@@ -100,30 +90,8 @@ export default function App() {
       background: BOARD.bg, position: 'relative',
     }}>
 
-      {/* Atmospheric background layers */}
-      <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-        background: `
-          radial-gradient(ellipse 80% 40% at 50% 0%, #0a1a3a18 0%, transparent 70%),
-          radial-gradient(ellipse 80% 40% at 50% 100%, #1a0a0a18 0%, transparent 70%)
-        `,
-      }} />
-      {/* Subtle grid texture */}
-      <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-        backgroundImage: `
-          linear-gradient(#ffffff03 1px, transparent 1px),
-          linear-gradient(90deg, #ffffff03 1px, transparent 1px)
-        `,
-        backgroundSize: '40px 40px',
-      }} />
-
-      {/* Ambient particles */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        {[12, 28, 45, 62, 78, 88].map((left, i) => (
-          <Particle key={i} delay={i * 1.5} left={left} />
-        ))}
-      </div>
+      {/* Arena background */}
+      <ArenaBackground />
 
       {/* Turn transition banner */}
       <TurnBanner player={activePlayer} show={showTurnBanner} />
@@ -136,13 +104,20 @@ export default function App() {
       }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
+          padding: '4px 8px',
+          background: 'linear-gradient(90deg, #0a0a1208, #0a0a1240 50%, #0a0a1208)',
+          borderRadius: 6,
+          borderBottom: '1px solid #ffffff06',
+        }}>
           <span style={{
-            fontSize: 15, fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase',
+            fontSize: 14, fontWeight: 800, letterSpacing: 3, textTransform: 'uppercase',
             fontFamily: FONT_HEADING,
-            background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+            background: 'linear-gradient(135deg, #fef3c7, #fbbf24, #d97706)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
+            textShadow: 'none',
           }}>
             TCG Blueprint
           </span>
@@ -202,11 +177,12 @@ export default function App() {
 
       {/* Log sidebar */}
       <div style={{
-        width: 240, borderLeft: '1px solid #111',
+        width: 240, borderLeft: '1px solid #0a0a10',
         display: 'flex', flexDirection: 'column',
         padding: '12px 10px', gap: 8, overflow: 'hidden',
-        background: BOARD.logBg,
+        background: `linear-gradient(180deg, ${BOARD.logBg} 0%, #04040a 100%)`,
         position: 'relative', zIndex: 1,
+        boxShadow: 'inset 2px 0 12px #00000040',
       }}>
         <div style={{
           fontSize: 9, letterSpacing: 2.5, textTransform: 'uppercase',
@@ -215,6 +191,8 @@ export default function App() {
           background: 'linear-gradient(135deg, #4b5563, #374151)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
+          borderBottom: '1px solid #ffffff08',
+          paddingBottom: 6,
         }}>
           Action Log
         </div>
